@@ -1,25 +1,55 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useEffect } from "react";
+import { GoogleSpreadsheet } from "google-spreadsheet";
+import creds from "./tutorial_keys.json";
 
-function App() {
+const App = () => {
+  const doc = new GoogleSpreadsheet(creds.sheets_id);
+
+  useEffect(() => {
+    async function fetchData() {
+      await doc.useServiceAccountAuth({
+        client_email: creds.client_email,
+        private_key: creds.private_key,
+      });
+      await doc.loadInfo();
+      getRows();
+    }
+    fetchData();
+  });
+
+  const getRows = async () => {
+    let sheet = doc.sheetsByIndex[0];
+    const rows = await sheet.getRows();
+    const getData = rows.map((item) => [
+      {
+        firstname: item.firstname,
+        lastname: item.lastname,
+        website: item.website,
+      },
+    ]);
+    console.log(getData);
+  };
+
+  const addRow = async () => {
+    let sheet = doc.sheetsByIndex[0];
+    await sheet.addRow({
+      firstname: "Bob",
+      lastname: "Lazar",
+      website: "boblazar.com",
+    });
+  };
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div>
+      <button
+        onClick={() => {
+          addRow();
+        }}
+      >
+        Add Row
+      </button>
     </div>
   );
-}
+};
 
 export default App;
